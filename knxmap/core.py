@@ -48,7 +48,7 @@ class KnxMap(object):
         # (0 means use as much as a device supports)
         self.max_connections = max_connections
         # q contains all KNXnet/IP gateways
-        self.q = Queue(loop=self.loop)
+        self.q = Queue()
         # bus_queues is a dict containing a bus queue for each KNXnet/IP gateway
         self.bus_queues = {}
         # bus_protocols is a list of all bus protocol instances for proper connection shutdown
@@ -87,7 +87,7 @@ class KnxMap(object):
         self.q.put_nowait(target)
 
     def add_bus_queue(self, gateway, bus_targets):
-        self.bus_queues[gateway] = Queue(loop=self.loop)
+        self.bus_queues[gateway] = Queue()
         for target in bus_targets:
             self.bus_queues[gateway].put_nowait(target)
         return self.bus_queues[gateway]
@@ -262,7 +262,7 @@ class KnxMap(object):
                             struct.pack('256s', str.encode(self.iface)))
             protocol = KnxGatewaySearch(multicast_addr=self.multicast_addr,
                                         port=self.port)
-            waiter = asyncio.Future(loop=self.loop)
+            waiter = asyncio.Future()
             transport = self.loop._make_datagram_transport(
                 sock, protocol, (self.multicast_addr, self.port), waiter)
             try:
@@ -331,8 +331,8 @@ class KnxMap(object):
     def brute(self, targets=None, bus_target=None, full_key_space=False):
         if targets:
             self.set_targets(targets)
-        tasks = [asyncio.Task(self.bruteforce_auth_key(t, bus_target, full_key_space),
-                              loop=self.loop) for t in self.targets]
+        tasks = [asyncio.Task(self.bruteforce_auth_key(t, bus_target, full_key_space)) 
+                 for t in self.targets]
         yield from asyncio.wait(tasks)
 
     @asyncio.coroutine
